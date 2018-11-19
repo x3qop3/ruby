@@ -16,9 +16,9 @@ end
 url = 'https://www.21vek.by/mobile/'
 html = open(url)
 doc = Nokogiri::HTML(html)
-showings = doc.xpath('//dd[@class="result__desc"]/tr').map do |showing|
-  showing =  {diagon: showing.xpath('.//td[@class="result__attr_var"]/text()').text,
-              diagonal: showing.xpath('.//td[@class="result__attr_val"]/text()').text}
+showings = doc.xpath('//dd[@class="result__desc "]/tr').map do |showing|
+  showing = {diagon: showing.xpath('.//td[@class="result__attr_var  cr-result__attr_odd"]/text()').text,
+              diagonal: showing.xpath('.//td[@class="result__attr_val  cr-result__attr_odd"]/text()').text}
 end
 
 
@@ -35,6 +35,7 @@ end
 html = open(url)
 doc = Nokogiri::HTML(html)
 puts "____________________________________________________________"
-showings = doc.xpath('//dd[@class="result__desc"]/tr').map do |showing|
-  puts showing.xpath('.//td[@class="result__attr_var"]/text()').text + "-" + showing.xpath('.//td[@class="result__attr_val"]/text()').text
+showings = doc.xpath('//dd[@class="result__desc "]/tr').map do |showing|
+  puts showing.xpath('.//td[@class="result__attr_var  cr-result__attr_odd"]/text()').text + " - " + showing.xpath('.//td[@class="result__attr_val  cr-result__attr_odd"]/text()').text
+
 end
