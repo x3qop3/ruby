@@ -17,9 +17,15 @@ showings = doc.xpath('//ul[@class="b-result"]/li').map do |showing|
   }
 end
 
-url = []
-url = doc.xpath('(//div[@id="j-paginator"]//*[@name="2"]/@href)[last()]').text
 
+url = doc.xpath('(//div[@id="j-paginator"]//a[@rel="next"]/preceding-sibling::a[1]/text()').text
+pages = doc.xpath('(//div[@id="j-paginator"]//a[@rel="next"]/preceding-sibling::a[1]/text()').text
+pages = []
+
+for
+url in pages
+
+  puts url
 
 end
 
