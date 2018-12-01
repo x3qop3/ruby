@@ -2,60 +2,72 @@ require 'pp'
 require 'nokogiri'
 require 'open-uri'
 require 'csv'
-url = 'https://www.21vek.by/mobile/'
-html = open(url)
-doc = Nokogiri::HTML(html)
-showings = []
-doc.xpath('//ul[@class="b-result"]/li').each do |showing|
+require 'choice'
 
-  showings << {name: showing.xpath('.//span[@class="result__name"]/text()').text,
-             price: showing.xpath('.//span[@data-price]/@data-price').text,
-               oldprice: showing.xpath('.//span[@data-old_price]/@data-old_price').text,
-               logo: showing.xpath('.//img[@class="result__brand"]/@src').text[/brends\/(.*)\.png/,1],
-               code: showing.xpath('.//span[@class="g-code"]/text()').text.gsub(/[^0-9\. ]/, ''),
-             diagonal: showing.xpath('.//tr[contains(.,"Диагональ экрана")]//td[contains (@class,"result__attr_val")]/text()').text,
-             oper:showing.xpath('.//tr[contains(.,"Оперативная память")]//td[contains (@class,"result__attr_val")]/text()').text
+class Parser
+  def initialize(url)
+
+  end
+end
+
+SEED = 'https://www.21vek.by/mobile/'
+
+def get_doc(url)
+  puts url ||= SEED
+  html = open(url)
+  Nokogiri::HTML(html)
+end
+
+def get_hash(node)
+  {
+      name: node.xpath('.//span[@class="result__name"]/text()').text,
+      price: node.xpath('.//span[@data-price]/@data-price').text,
+      oldprice: node.xpath('.//span[@data-old_price]/@data-old_price').text,
+      logo: node.xpath('.//img[@class="result__brand"]/@src').text[/brends\/(.*)\.png/, 1],
+      code: node.xpath('.//span[@class="g-code"]/text()').text.gsub(/[^0-9\.]/, ''),
+      diagonal: node.xpath('.//tr[contains(.,"Диагональ экрана")]//td[contains (@class,"result__attr_val")]/text()').text,
+      oper: node.xpath('.//tr[contains(.,"Оперативная память")]//td[contains (@class,"result__attr_val")]/text()').text
   }
 end
 
+def get_page_result(doc)
+  doc.xpath('//ul[@class="b-result"]/li').map do |showing|
+    showings = get_hash(showing)
+  end
+end
 
+showings = []
+doc = get_doc(nil)
+showings += get_page_result(doc)
 
 pages = doc.xpath('//div[@id="j-paginator"]//a[@rel="next"]/preceding-sibling::a[1]/text()').text.to_i
 
+(2..pages).each do |url|
+  doc = get_doc("#{SEED}page:#{url}/")
+  showings += get_page_result(doc)
+end
 
-for url in 2..pages
+showings.each {|s| puts s}
+puts "size: #{showings.size}"
 
-  url = "https://www.21vek.by/mobile/page:#{url}/"
-  html = open(url)
-  doc = Nokogiri::HTML(html)
-  doc.xpath('//ul[@class="b-result"]/li').each do |showing|
-
-    showings << {name: showing.xpath('.//span[@class="result__name"]/text()').text,
-                price: showing.xpath('.//span[@data-price]/@data-price').text,
-                 oldprice: showing.xpath('.//span[@data-old_price]/@data-old_price').text,
-                 code: showing.xpath('.//span[@class="g-code"]/text()').text.gsub(/[^0-9\. ]/, ''),
-                 logo: showing.xpath('.//img[@class="result__brand"]/@src').text[/brends\/(.*)\.png/,1],
-                diagonal: showing.xpath('.//tr[contains(.,"Диагональ экрана")]//td[contains (@class,"result__attr_val")]/text()').text,
-                oper:showing.xpath('.//tr[contains(.,"Оперативная память")]//td[contains (@class,"result__attr_val")]/text()').text
-    }
-
+class CSV
+  CSV.open("21vek.csv", "a+") do |csv|
+  
   end
 end
 
-showings.each{|s| puts s }
-puts url
-html = open(url)
-result = []
-showings = doc.xpath('//ul[@class="b-result"]/li').map do |showing|
-  result<<showing.xpath('.//span[@class="result__name"]/text()').text + " - " + showing.xpath('.//span[@data-price]/@data-price').text + " - "+showing.xpath('.//span[@data-old_price]/@data-old_price').text + " - " + showing.xpath('.//span[@class="g-code"]/text()').text.gsub(/[^0-9\. ]/, '')   #gsub("[^0-9\. ]")
-end
-html = open(url)
-doc = Nokogiri::HTML(html)
-puts "____________________________________________________________"
-showings = doc.xpath('//dd[contains (@class, "result__desc")]//tr[contains(.,"Диагональ экрана")]').map do |showing|
-  showings = doc.xpath('//dd[contains (@class, "result__desc")]//tr[contains(.,"Оперативная память")]').map do |showing|
-  result<<showing.xpath('.//td[contains (@class, "result__attr_var")]/text()').text + " - " + showing.xpath('.//td[contains (@class,"result__attr_val")]/text()').text + " - " + showing.xpath('.//td[contains (@class,"result__attr_var")]/text()').text + " - "+ showing.xpath('.//td[contains (@class,"result__attr_val")]/text()').text + " - " + showing.xpath('.//img[@class="result__brand"]/@src').text[/brends\/(.*)\.png/,1]
 
 
-  end
+Choise.option do
+header ''
+  header 'change URL:'
+
+    option :host do
+      short '-h'
+      long '--host = URL'
+      desc 'you can change URL'
+      default 'https://www.21vek.by/mobile/'
+    end
 end
+puts 'host: ' + Choice[:host]
+
